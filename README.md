@@ -36,3 +36,8 @@ require('@ungap/custom-elements');
 ```
 
 The module will incrementally patch the global `window`/`self` reference, adding a `customElements` object that is compatible with the API.
+
+
+## Source Code
+
+This module simply provides [@webreflection/custom-elements](https://github.com/WebReflection/custom-elements#readme) module under the [ungap](https://ungap.github.io/) umbrella.

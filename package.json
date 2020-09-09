@@ -1,5 +1,5 @@
 {
-  "name": "custom-elements",
+  "name": "@ungap/custom-elements",
   "version": "0.0.0",
   "description": "All inclusive customElements polyfill for every browser",
   "main": "index.js",
@@ -7,10 +7,23 @@
   "scripts": {
     "build": "cp ./node_modules/@webreflection/custom-elements/*.js ./"
   },
-  "keywords": ["custom", "elements", "polyfill"],
+  "keywords": [
+    "custom",
+    "elements",
+    "polyfill",
+    "customElements"
+  ],
   "author": "Andrea Giammarchi",
   "license": "ISC",
   "devDependencies": {
     "@webreflection/custom-elements": "^0.2.2"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ungap/custom-elements.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ungap/custom-elements/issues"
+  },
+  "homepage": "https://github.com/ungap/custom-elements#readme"
 }
