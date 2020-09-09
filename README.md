@@ -1,6 +1,6 @@
 # Custom Elements Polyfill
 
-This module provides the [Custom Elements V1 API](https://html.spec.whatwg.org/multipage/custom-elements.html#custom-elements-api) as defined by standards, including the ability to [extend builtin elements](https://html.spec.whatwg.org/multipage/custom-elements.html#custom-elements-customized-builtin-example).
+This module provides the [Custom Elements V1 API](https://html.spec.whatwg.org/multipage/custom-elements.html#custom-elements-api) as defined by standards, including the ability to [extend builtin elements](https://html.spec.whatwg.org/multipage/custom-elements.html#custom-elements-customized-builtin-example), all in ~2K _minified_ and _gzipped_ / _brotlied_.
 
 
 ## Compatibility
