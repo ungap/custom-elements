@@ -425,7 +425,17 @@
     defineProperty(document$1, 'createElement', {
       value: function value(name, options) {
         var is = options && options.is;
-        return is ? new (_registry.get(is))() : _createElement.call(document$1, name);
+
+        if (is) {
+          var Class = _registry.get(is);
+
+          if (Class && _classes.get(Class).tag === name) return new Class();
+        }
+
+        var element = _createElement.call(document$1, name);
+
+        if (is) element.setAttribute('is', is);
+        return element;
       }
     });
     defineProperty(Element.prototype, 'attachShadow', {
@@ -461,7 +471,7 @@
         var tag = options && options["extends"];
 
         if (tag) {
-          if (getCE(is)) throw new Error("the name \"".concat(is, "\" has already been used with this registry"));
+          if (getCE(is)) throw new Error("'".concat(is, "' has already been defined as a custom element"));
           selector = "".concat(tag, "[is=\"").concat(is, "\"]");
 
           _classes.set(Class, {
