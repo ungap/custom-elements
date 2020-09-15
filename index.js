@@ -269,7 +269,8 @@
       configurable: true,
       value: function value(name, options) {
         var is = options && options.is;
-        return is ? new (registry.get(is))() : createElement.call(document$1, name);
+        var Class = is ? registry.get(is) : registry.get(name);
+        return Class ? new Class() : createElement.call(document$1, name);
       }
     }); // in case ShadowDOM is used through a polyfill, to avoid issues
     // with builtin extends within shadow roots
