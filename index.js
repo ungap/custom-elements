@@ -242,6 +242,9 @@
     defineProperty(self, 'customElements', {
       configurable: true,
       value: {
+        _: {
+          classes: classes
+        },
         define: function define(is, Class) {
           if (registry.has(is)) throw new Error("the name \"".concat(is, "\" has already been used with this registry"));
           classes.set(Class, is);
@@ -325,7 +328,8 @@
     var customElements = self.customElements;
     var attachShadow = Element.prototype.attachShadow;
     var _createElement = document$1.createElement;
-    var define = customElements.define,
+    var _ = customElements._,
+        define = customElements.define,
         _get = customElements.get;
     var shadowRoots = new WeakMap$1();
     var shadows = new Set$1();
@@ -381,14 +385,14 @@
 
     var _whenDefined2 = function _whenDefined2(name) {
       if (!_defined.has(name)) {
-        var _,
+        var _2,
             $ = new Promise$1(function ($) {
-          _ = $;
+          _2 = $;
         });
 
         _defined.set(name, {
           $: $,
-          _: _
+          _: _2
         });
       }
 
@@ -403,7 +407,11 @@
     }).forEach(function (k) {
       function HTMLBuiltIn() {
         var constructor = this.constructor;
-        if (!_classes.has(constructor)) throw new TypeError('Illegal constructor');
+
+        if (!_classes.has(constructor)) {
+          if (_ && _.classes.has(constructor)) return;
+          throw new TypeError('Illegal constructor');
+        }
 
         var _classes$get = _classes.get(constructor),
             is = _classes$get.is,
