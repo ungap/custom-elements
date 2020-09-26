@@ -3,6 +3,7 @@
   "version": "0.1.4",
   "description": "All inclusive customElements polyfill for every browser",
   "main": "index.js",
+  "module": "index.js",
   "unpkg": "min.js",
   "scripts": {
     "build": "cp ./node_modules/@webreflection/custom-elements/*.js ./"
