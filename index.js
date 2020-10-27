@@ -177,7 +177,8 @@
       HTMLElement = _self$1.HTMLElement,
       Node = _self$1.Node,
       Error = _self$1.Error,
-      TypeError = _self$1.TypeError;
+      TypeError = _self$1.TypeError,
+      Reflect = _self$1.Reflect;
   var Promise$1 = self.Promise || Lie;
   var defineProperty = Object.defineProperty,
       getOwnPropertyNames = Object.getOwnPropertyNames,
@@ -246,9 +247,6 @@
     defineProperty(self, 'customElements', {
       configurable: true,
       value: {
-        _: {
-          classes: classes
-        },
         define: function define(is, Class) {
           if (registry.has(is)) throw new Error("the name \"".concat(is, "\" has already been used with this registry"));
           classes.set(Class, is);
@@ -332,9 +330,16 @@
     var customElements = self.customElements;
     var attachShadow = Element.prototype.attachShadow;
     var _createElement = document$1.createElement;
-    var _ = customElements._,
-        define = customElements.define,
+    var define = customElements.define,
         _get = customElements.get;
+
+    var _ref = Reflect || {
+      construct: function construct(HTMLElement) {
+        return HTMLElement.call(this);
+      }
+    },
+        construct = _ref.construct;
+
     var shadowRoots = new WeakMap$1();
     var shadows = new Set$1();
 
@@ -389,14 +394,14 @@
 
     var _whenDefined2 = function _whenDefined2(name) {
       if (!_defined.has(name)) {
-        var _2,
+        var _,
             $ = new Promise$1(function ($) {
-          _2 = $;
+          _ = $;
         });
 
         _defined.set(name, {
           $: $,
-          _: _2
+          _: _
         });
       }
 
@@ -407,30 +412,30 @@
 
     var _override = null;
     getOwnPropertyNames(self).filter(function (k) {
-      return /^HTML(?!Element)/.test(k);
+      return /^HTML/.test(k);
     }).forEach(function (k) {
+      var HTMLElement = self[k];
+
       function HTMLBuiltIn() {
         var constructor = this.constructor;
-
-        if (!_classes.has(constructor)) {
-          if (_ && _.classes.has(constructor)) return;
-          throw new TypeError('Illegal constructor');
-        }
+        if (!_classes.has(constructor)) throw new TypeError('Illegal constructor');
 
         var _classes$get = _classes.get(constructor),
             is = _classes$get.is,
             tag = _classes$get.tag;
 
-        if (_override) return _augment(_override, is);
+        if (is) {
+          if (_override) return _augment(_override, is);
 
-        var element = _createElement.call(document$1, tag);
+          var element = _createElement.call(document$1, tag);
 
-        element.setAttribute('is', is);
-        return _augment(setPrototypeOf(element, constructor.prototype), is);
+          element.setAttribute('is', is);
+          return _augment(setPrototypeOf(element, constructor.prototype), is);
+        } else return construct.call(this, HTMLElement, [], constructor);
       }
 
 
-      (HTMLBuiltIn.prototype = self[k].prototype).constructor = HTMLBuiltIn;
+      (HTMLBuiltIn.prototype = HTMLElement.prototype).constructor = HTMLBuiltIn;
       defineProperty(self, k, {
         value: HTMLBuiltIn
       });
@@ -499,6 +504,12 @@
           _query.push(selector);
         } else {
           define.apply(customElements, arguments);
+
+          _classes.set(Class, {
+            is: '',
+            tag: is
+          });
+
           shadowed.push(selector = is);
         }
 
