@@ -487,15 +487,18 @@
       value: function value(is, Class, options) {
         var selector;
         var tag = options && options["extends"];
+        if (getCE(is)) throw new Error("'".concat(is, "' has already been defined as a custom element"));
+
+        _classes.set(Class, tag ? {
+          is: is,
+          tag: tag
+        } : {
+          is: '',
+          tag: is
+        });
 
         if (tag) {
-          if (getCE(is)) throw new Error("'".concat(is, "' has already been defined as a custom element"));
           selector = "".concat(tag, "[is=\"").concat(is, "\"]");
-
-          _classes.set(Class, {
-            is: is,
-            tag: tag
-          });
 
           _prototypes.set(selector, Class.prototype);
 
@@ -504,12 +507,6 @@
           _query.push(selector);
         } else {
           define.apply(customElements, arguments);
-
-          _classes.set(Class, {
-            is: '',
-            tag: is
-          });
-
           shadowed.push(selector = is);
         }
 
