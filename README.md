@@ -24,6 +24,13 @@ Either install this module via `npm i @ungap/custom-elements`, and include it in
 <script src="//unpkg.com/@ungap/custom-elements"></script>
 ```
 
+If targeted browsers are ES2015 compatible, the `es.js` file would provide the same polyfill, just lighter, as no transpilation is used.
+
+```html
+<script src="//unpkg.com/@ungap/custom-elements/es.js"></script>
+```
+
+
 
 If installed as module, please remember to include it on top of your main JS file.
 
