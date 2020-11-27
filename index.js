@@ -265,7 +265,9 @@
         whenDefined: whenDefined
       }
     });
-    (HTMLBuiltIn.prototype = HTMLElement.prototype).constructor = HTMLBuiltIn;
+    defineProperty(HTMLBuiltIn.prototype = HTMLElement.prototype, 'constructor', {
+      value: HTMLBuiltIn
+    });
     defineProperty(self, 'HTMLElement', {
       configurable: true,
       value: HTMLBuiltIn
@@ -435,7 +437,9 @@
       }
 
 
-      (HTMLBuiltIn.prototype = HTMLElement.prototype).constructor = HTMLBuiltIn;
+      defineProperty(HTMLBuiltIn.prototype = HTMLElement.prototype, 'constructor', {
+        value: HTMLBuiltIn
+      });
       defineProperty(self, k, {
         value: HTMLBuiltIn
       });
@@ -485,9 +489,9 @@
     defineProperty(customElements, 'define', {
       configurable: true,
       value: function value(is, Class, options) {
+        if (getCE(is)) throw new Error("'".concat(is, "' has already been defined as a custom element"));
         var selector;
         var tag = options && options["extends"];
-        if (getCE(is)) throw new Error("'".concat(is, "' has already been defined as a custom element"));
 
         _classes.set(Class, tag ? {
           is: is,
