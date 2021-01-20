@@ -456,6 +456,7 @@
       });
     });
     defineProperty(document$1, 'createElement', {
+      configurable: true,
       value: function value(name, options) {
         var is = options && options.is;
 
@@ -472,6 +473,7 @@
       }
     });
     if (attachShadow) defineProperty(Element.prototype, 'attachShadow', {
+      configurable: true,
       value: function value() {
         var root = attachShadow.apply(this, arguments);
 
