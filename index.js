@@ -327,7 +327,7 @@
           parse = _shadowRoots$get.parse,
           root = _shadowRoots$get.root;
 
-      parse(root.querySelectorAll(this), element.isConnected);
+      parse(root.querySelectorAll('' + this), element.isConnected);
     };
 
     var customElements = self.customElements;
@@ -531,7 +531,7 @@
           if (tag) {
             _parse(document$1.querySelectorAll(selector));
 
-            shadows.forEach(parseShadow, [selector]);
+            shadows.forEach(parseShadow, selector);
           } else parseShadowed(document$1.querySelectorAll(selector));
         });
 
