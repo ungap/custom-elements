@@ -186,6 +186,23 @@
       setPrototypeOf = Object.setPrototypeOf;
   var legacy = !self.customElements;
 
+  var expando = function expando(element) {
+    var key = keys(element);
+    var value = [];
+    var length = key.length;
+
+    for (var i = 0; i < length; i++) {
+      value[i] = element[key[i]];
+      delete element[key[i]];
+    }
+
+    return function () {
+      for (var _i = 0; _i < length; _i++) {
+        element[key[_i]] = value[_i];
+      }
+    };
+  };
+
   if (legacy) {
     var HTMLBuiltIn = function HTMLBuiltIn() {
       var constructor = this.constructor;
@@ -207,12 +224,14 @@
       var proto = prototypes.get(selector);
 
       if (connected && !proto.isPrototypeOf(element)) {
+        var redefine = expando(element);
         override = setPrototypeOf(element, proto);
 
         try {
           new proto.constructor();
         } finally {
           override = null;
+          redefine();
         }
       }
 
@@ -365,22 +384,14 @@
       var proto = _prototypes.get(selector);
 
       if (connected && !proto.isPrototypeOf(element)) {
-        var k = keys(element);
-        var v = k.map(function (key) {
-          var value = element[key];
-          delete element[key];
-          return value;
-        });
+        var redefine = expando(element);
         _override = setPrototypeOf(element, proto);
 
         try {
           new proto.constructor();
         } finally {
           _override = null;
-
-          for (var i = 0, length = k.length; i < length; i++) {
-            element[k[i]] = v[i];
-          }
+          redefine();
         }
       }
 
