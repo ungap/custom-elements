@@ -59,30 +59,77 @@
     };
   });
 
-  var _self = self,
-      document = _self.document,
-      MutationObserver = _self.MutationObserver,
-      Set = _self.Set,
-      WeakMap = _self.WeakMap;
+  var TRUE = true,
+      FALSE = false;
+  var QSA$1 = 'querySelectorAll';
+
+  function add(node) {
+    this.observe(node, {
+      subtree: TRUE,
+      childList: TRUE
+    });
+  }
+  /**
+   * Start observing a generic document or root element.
+   * @param {Function} callback triggered per each dis/connected node
+   * @param {Element?} root by default, the global document to observe
+   * @param {Function?} MO by default, the global MutationObserver
+   * @returns {MutationObserver}
+   */
+
+
+  var notify = function notify(callback, root, MO) {
+    var loop = function loop(nodes, added, removed, connected, pass) {
+      for (var i = 0, length = nodes.length; i < length; i++) {
+        var node = nodes[i];
+
+        if (pass || QSA$1 in node) {
+          if (connected) {
+            if (!added.has(node)) {
+              added.add(node);
+              removed["delete"](node);
+              callback(node, connected);
+            }
+          } else if (!removed.has(node)) {
+            removed.add(node);
+            added["delete"](node);
+            callback(node, connected);
+          }
+
+          if (!pass) loop(node[QSA$1]('*'), added, removed, connected, TRUE);
+        }
+      }
+    };
+
+    var observer = new (MO || MutationObserver)(function (records) {
+      for (var added = new Set(), removed = new Set(), i = 0, length = records.length; i < length; i++) {
+        var _records$i = records[i],
+            addedNodes = _records$i.addedNodes,
+            removedNodes = _records$i.removedNodes;
+        loop(removedNodes, added, removed, FALSE, FALSE);
+        loop(addedNodes, added, removed, TRUE, FALSE);
+      }
+    });
+    observer.add = add;
+    observer.add(root || document);
+    return observer;
+  };
+
+  var QSA = 'querySelectorAll';
+  var _self$1 = self,
+      document$2 = _self$1.document,
+      Element$1 = _self$1.Element,
+      MutationObserver$2 = _self$1.MutationObserver,
+      Set$2 = _self$1.Set,
+      WeakMap$1 = _self$1.WeakMap;
 
   var elements = function elements(element) {
-    return 'querySelectorAll' in element;
+    return QSA in element;
   };
 
   var filter = [].filter;
   var qsaObserver = (function (options) {
-    var live = new WeakMap();
-
-    var callback = function callback(records) {
-      var query = options.query;
-
-      if (query.length) {
-        for (var i = 0, length = records.length; i < length; i++) {
-          loop(filter.call(records[i].addedNodes, elements), true, query);
-          loop(filter.call(records[i].removedNodes, elements), false, query);
-        }
-      }
-    };
+    var live = new WeakMap$1();
 
     var drop = function drop(elements) {
       for (var i = 0, length = elements.length; i < length; i++) {
@@ -91,49 +138,11 @@
     };
 
     var flush = function flush() {
-      callback(observer.takeRecords());
-    };
+      var records = observer.takeRecords();
 
-    var loop = function loop(elements, connected, query) {
-      var set = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : new Set();
-
-      var _loop = function _loop(_selectors, _element, i, length) {
-        // guard against repeated elements within nested querySelectorAll results
-        if (!set.has(_element = elements[i])) {
-          set.add(_element);
-
-          if (connected) {
-            for (var q, m = matches(_element), _i = 0, _length = query.length; _i < _length; _i++) {
-              if (m.call(_element, q = query[_i])) {
-                if (!live.has(_element)) live.set(_element, new Set());
-                _selectors = live.get(_element); // guard against selectors that were handled already
-
-                if (!_selectors.has(q)) {
-                  _selectors.add(q);
-
-                  options.handle(_element, connected, q);
-                }
-              }
-            }
-          } // guard against elements that never became live
-          else if (live.has(_element)) {
-              _selectors = live.get(_element);
-              live["delete"](_element);
-
-              _selectors.forEach(function (q) {
-                options.handle(_element, connected, q);
-              });
-            }
-
-          loop(querySelectorAll(_element), connected, query, set);
-        }
-
-        selectors = _selectors;
-        element = _element;
-      };
-
-      for (var selectors, element, i = 0, length = elements.length; i < length; i++) {
-        _loop(selectors, element, i);
+      for (var i = 0, length = records.length; i < length; i++) {
+        parse(filter.call(records[i].removedNodes, elements), false);
+        parse(filter.call(records[i].addedNodes, elements), true);
       }
     };
 
@@ -141,23 +150,48 @@
       return element.matches || element.webkitMatchesSelector || element.msMatchesSelector;
     };
 
+    var notifier = function notifier(element, connected) {
+      var selectors;
+
+      if (connected) {
+        for (var q, m = matches(element), i = 0, length = query.length; i < length; i++) {
+          if (m.call(element, q = query[i])) {
+            if (!live.has(element)) live.set(element, new Set$2());
+            selectors = live.get(element);
+
+            if (!selectors.has(q)) {
+              selectors.add(q);
+              options.handle(element, connected, q);
+            }
+          }
+        }
+      } else if (live.has(element)) {
+        selectors = live.get(element);
+        live["delete"](element);
+        selectors.forEach(function (q) {
+          options.handle(element, connected, q);
+        });
+      }
+    };
+
     var parse = function parse(elements) {
       var connected = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-      loop(elements, connected, options.query);
+
+      for (var i = 0, length = elements.length; i < length; i++) {
+        notifier(elements[i], connected);
+      }
     };
 
-    var querySelectorAll = function querySelectorAll(root) {
-      return query.length ? root.querySelectorAll(query) : query;
-    };
-
-    var observer = new MutationObserver(callback);
-    var root = options.root || document;
     var query = options.query;
-    observer.observe(root, {
-      childList: true,
-      subtree: true
-    });
-    parse(querySelectorAll(root));
+    var root = options.root || document$2;
+    var observer = notify(notifier, root, MutationObserver$2);
+    var attachShadow = Element$1.prototype.attachShadow;
+    if (attachShadow) Element$1.prototype.attachShadow = function (init) {
+      var shadowRoot = attachShadow.call(this, init);
+      observer.add(shadowRoot);
+      return shadowRoot;
+    };
+    if (query.length) parse(root[QSA](query));
     return {
       drop: drop,
       flush: flush,
@@ -166,24 +200,24 @@
     };
   });
 
-  var _self$1 = self,
-      document$1 = _self$1.document,
-      Map = _self$1.Map,
-      MutationObserver$1 = _self$1.MutationObserver,
-      Object = _self$1.Object,
-      Set$1 = _self$1.Set,
-      WeakMap$1 = _self$1.WeakMap,
-      Element = _self$1.Element,
-      HTMLElement = _self$1.HTMLElement,
-      Node = _self$1.Node,
-      Error = _self$1.Error,
-      TypeError = _self$1.TypeError,
-      Reflect = _self$1.Reflect;
+  var _self = self,
+      document$1 = _self.document,
+      Map = _self.Map,
+      MutationObserver$1 = _self.MutationObserver,
+      Object$1 = _self.Object,
+      Set$1 = _self.Set,
+      WeakMap = _self.WeakMap,
+      Element = _self.Element,
+      HTMLElement = _self.HTMLElement,
+      Node = _self.Node,
+      Error = _self.Error,
+      TypeError = _self.TypeError,
+      Reflect = _self.Reflect;
   var Promise$1 = self.Promise || Lie;
-  var defineProperty = Object.defineProperty,
-      keys = Object.keys,
-      getOwnPropertyNames = Object.getOwnPropertyNames,
-      setPrototypeOf = Object.setPrototypeOf;
+  var defineProperty = Object$1.defineProperty,
+      keys = Object$1.keys,
+      getOwnPropertyNames = Object$1.getOwnPropertyNames,
+      setPrototypeOf = Object$1.setPrototypeOf;
   var legacy = !self.customElements;
 
   var expando = function expando(element) {
@@ -342,11 +376,9 @@
 
   if (legacy) {
     var parseShadow = function parseShadow(element) {
-      var _shadowRoots$get = shadowRoots.get(element),
-          parse = _shadowRoots$get.parse,
-          root = _shadowRoots$get.root;
+      var root = shadowRoots.get(element);
 
-      parse(root.querySelectorAll(this), element.isConnected);
+      _parse(root.querySelectorAll(this), element.isConnected);
     };
 
     var customElements = self.customElements;
@@ -362,7 +394,7 @@
     },
         construct = _ref.construct;
 
-    var shadowRoots = new WeakMap$1();
+    var shadowRoots = new WeakMap();
     var shadows = new Set$1();
 
     var _classes = new Map();
@@ -483,25 +515,11 @@
         return element;
       }
     });
-    if (attachShadow) defineProperty(Element.prototype, 'attachShadow', {
-      configurable: true,
-      value: function value() {
-        var root = attachShadow.apply(this, arguments);
-
-        var _qsaObserver4 = qsaObserver({
-          query: _query,
-          root: root,
-          handle: _handle
-        }),
-            parse = _qsaObserver4.parse;
-
-        shadowRoots.set(this, {
-          root: root,
-          parse: parse
-        });
-        return root;
-      }
-    });
+    if (attachShadow) Element.prototype.attachShadow = function (init) {
+      var root = attachShadow.call(this, init);
+      shadowRoots.set(this, root);
+      return root;
+    };
     defineProperty(customElements, 'get', {
       configurable: true,
       value: getCE

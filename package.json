@@ -17,7 +17,7 @@
   "author": "Andrea Giammarchi",
   "license": "ISC",
   "devDependencies": {
-    "@webreflection/custom-elements": "^0.2.15"
+    "@webreflection/custom-elements": "^1.0.0"
   },
   "repository": {
     "type": "git",
