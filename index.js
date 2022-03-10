@@ -468,7 +468,7 @@
 
     var _override = null;
     getOwnPropertyNames(self).filter(function (k) {
-      return /^HTML/.test(k);
+      return /^HTML.*Element$/.test(k);
     }).forEach(function (k) {
       var HTMLElement = self[k];
 
@@ -569,4 +569,4 @@
     });
   }
 
-}());
+})();
