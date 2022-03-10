@@ -319,8 +319,6 @@
         whenDefined: whenDefined
       }
     });
-    if(HTMLElement.prototype)
-    {
     defineProperty(HTMLBuiltIn.prototype = HTMLElement.prototype, 'constructor', {
       value: HTMLBuiltIn
     });
@@ -328,7 +326,6 @@
       configurable: true,
       value: HTMLBuiltIn
     });
-    }
     defineProperty(document$1, 'createElement', {
       configurable: true,
       value: function value(name, options) {
@@ -493,13 +490,15 @@
         } else return construct.call(this, HTMLElement, [], constructor);
       }
 
-
+        if(HTMLElement.prototype)
+    {
       defineProperty(HTMLBuiltIn.prototype = HTMLElement.prototype, 'constructor', {
         value: HTMLBuiltIn
       });
       defineProperty(self, k, {
         value: HTMLBuiltIn
       });
+    }
     });
     defineProperty(document$1, 'createElement', {
       configurable: true,
