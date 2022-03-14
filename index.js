@@ -385,7 +385,8 @@
     var attachShadow = Element.prototype.attachShadow;
     var _createElement = document$1.createElement;
     var define = customElements.define,
-        _get = customElements.get;
+        _get = customElements.get,
+        upgrade = customElements.upgrade;
 
     var _ref = Reflect || {
       construct: function construct(HTMLElement) {
@@ -527,6 +528,27 @@
     defineProperty(customElements, 'whenDefined', {
       configurable: true,
       value: _whenDefined2
+    });
+    defineProperty(customElements, 'upgrade', {
+      configurable: true,
+      value: function value(element) {
+        var is = element.getAttribute('is');
+
+        if (is) {
+          var _constructor = _registry.get(is);
+
+          if (_constructor) {
+            _augment(setPrototypeOf(element, _constructor.prototype), is); // apparently unnecessary because this is handled by qsa observer
+            // if (element.isConnected && element.connectedCallback)
+            //   element.connectedCallback();
+
+
+            return;
+          }
+        }
+
+        upgrade.call(customElements, element);
+      }
     });
     defineProperty(customElements, 'define', {
       configurable: true,
