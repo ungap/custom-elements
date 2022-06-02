@@ -2,24 +2,6 @@
 (function () {
   'use strict';
 
-  var Lie = typeof Promise === 'function' ? Promise : function (fn) {
-    var queue = [],
-        resolved = 0,
-        value;
-    fn(function ($) {
-      value = $;
-      resolved = 1;
-      queue.splice(0).forEach(then);
-    });
-    return {
-      then: then
-    };
-
-    function then(fn) {
-      return resolved ? setTimeout(fn, 0, value) : queue.push(fn), this;
-    }
-  };
-
   var attributesObserver = (function (whenDefined, MutationObserver) {
     var attributeChanged = function attributeChanged(records) {
       for (var i = 0, length = records.length; i < length; i++) {
@@ -59,60 +41,161 @@
     };
   });
 
-  var TRUE = true,
-      FALSE = false;
-  var QSA$1 = 'querySelectorAll';
-
-  function add(node) {
-    this.observe(node, {
-      subtree: TRUE,
-      childList: TRUE
-    });
+  function _unsupportedIterableToArray(o, minLen) {
+    if (!o) return;
+    if (typeof o === "string") return _arrayLikeToArray(o, minLen);
+    var n = Object.prototype.toString.call(o).slice(8, -1);
+    if (n === "Object" && o.constructor) n = o.constructor.name;
+    if (n === "Map" || n === "Set") return Array.from(o);
+    if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
   }
-  /**
-   * Start observing a generic document or root element.
-   * @param {Function} callback triggered per each dis/connected node
-   * @param {Element?} root by default, the global document to observe
-   * @param {Function?} MO by default, the global MutationObserver
-   * @returns {MutationObserver}
-   */
 
+  function _arrayLikeToArray(arr, len) {
+    if (len == null || len > arr.length) len = arr.length;
 
-  var notify = function notify(callback, root, MO) {
-    var loop = function loop(nodes, added, removed, connected, pass) {
-      for (var i = 0, length = nodes.length; i < length; i++) {
-        var node = nodes[i];
+    for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
 
-        if (pass || QSA$1 in node) {
-          if (connected) {
-            if (!added.has(node)) {
-              added.add(node);
-              removed["delete"](node);
-              callback(node, connected);
-            }
-          } else if (!removed.has(node)) {
-            removed.add(node);
-            added["delete"](node);
-            callback(node, connected);
-          }
+    return arr2;
+  }
 
-          if (!pass) loop(node[QSA$1]('*'), added, removed, connected, TRUE);
+  function _createForOfIteratorHelper(o, allowArrayLike) {
+    var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"];
+
+    if (!it) {
+      if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") {
+        if (it) o = it;
+        var i = 0;
+
+        var F = function () {};
+
+        return {
+          s: F,
+          n: function () {
+            if (i >= o.length) return {
+              done: true
+            };
+            return {
+              done: false,
+              value: o[i++]
+            };
+          },
+          e: function (e) {
+            throw e;
+          },
+          f: F
+        };
+      }
+
+      throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+    }
+
+    var normalCompletion = true,
+        didErr = false,
+        err;
+    return {
+      s: function () {
+        it = it.call(o);
+      },
+      n: function () {
+        var step = it.next();
+        normalCompletion = step.done;
+        return step;
+      },
+      e: function (e) {
+        didErr = true;
+        err = e;
+      },
+      f: function () {
+        try {
+          if (!normalCompletion && it.return != null) it.return();
+        } finally {
+          if (didErr) throw err;
         }
       }
     };
+  }
 
-    var observer = new (MO || MutationObserver)(function (records) {
-      for (var added = new Set(), removed = new Set(), i = 0, length = records.length; i < length; i++) {
-        var _records$i = records[i],
-            addedNodes = _records$i.addedNodes,
-            removedNodes = _records$i.removedNodes;
-        loop(removedNodes, added, removed, FALSE, FALSE);
-        loop(addedNodes, added, removed, TRUE, FALSE);
+  /*! (c) Andrea Giammarchi - ISC */
+  var TRUE = true,
+      FALSE = false,
+      QSA$1 = 'querySelectorAll';
+  /**
+   * Start observing a generic document or root element.
+   * @param {(node:Element, connected:boolean) => void} callback triggered per each dis/connected element
+   * @param {Document|Element} [root=document] by default, the global document to observe
+   * @param {Function} [MO=MutationObserver] by default, the global MutationObserver
+   * @param {string[]} [query=['*']] the selectors to use within nodes
+   * @returns {MutationObserver}
+   */
+
+  var notify = function notify(callback) {
+    var root = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : document;
+    var MO = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : MutationObserver;
+    var query = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : ['*'];
+
+    var loop = function loop(nodes, selectors, added, removed, connected, pass) {
+      var _iterator = _createForOfIteratorHelper(nodes),
+          _step;
+
+      try {
+        for (_iterator.s(); !(_step = _iterator.n()).done;) {
+          var node = _step.value;
+
+          if (pass || QSA$1 in node) {
+            if (connected) {
+              if (!added.has(node)) {
+                added.add(node);
+                removed["delete"](node);
+                callback(node, connected);
+              }
+            } else if (!removed.has(node)) {
+              removed.add(node);
+              added["delete"](node);
+              callback(node, connected);
+            }
+
+            if (!pass) loop(node[QSA$1](selectors), selectors, added, removed, connected, TRUE);
+          }
+        }
+      } catch (err) {
+        _iterator.e(err);
+      } finally {
+        _iterator.f();
+      }
+    };
+
+    var mo = new MO(function (records) {
+      if (query.length) {
+        var selectors = query.join(',');
+        var added = new Set(),
+            removed = new Set();
+
+        var _iterator2 = _createForOfIteratorHelper(records),
+            _step2;
+
+        try {
+          for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+            var _step2$value = _step2.value,
+                addedNodes = _step2$value.addedNodes,
+                removedNodes = _step2$value.removedNodes;
+            loop(removedNodes, selectors, added, removed, FALSE, FALSE);
+            loop(addedNodes, selectors, added, removed, TRUE, FALSE);
+          }
+        } catch (err) {
+          _iterator2.e(err);
+        } finally {
+          _iterator2.f();
+        }
       }
     });
-    observer.add = add;
-    observer.add(root || document);
-    return observer;
+    var observe = mo.observe;
+    (mo.observe = function (node) {
+      return observe.call(mo, node, {
+        subtree: TRUE,
+        childList: TRUE
+      });
+    })(root);
+    return mo;
   };
 
   var QSA = 'querySelectorAll';
@@ -184,11 +267,11 @@
 
     var query = options.query;
     var root = options.root || document$2;
-    var observer = notify(notifier, root, MutationObserver$2);
+    var observer = notify(notifier, root, MutationObserver$2, query);
     var attachShadow = Element$1.prototype.attachShadow;
     if (attachShadow) Element$1.prototype.attachShadow = function (init) {
       var shadowRoot = attachShadow.call(this, init);
-      observer.add(shadowRoot);
+      observer.observe(shadowRoot);
       return shadowRoot;
     };
     if (query.length) parse(root[QSA](query));
@@ -211,9 +294,8 @@
       HTMLElement = _self.HTMLElement,
       Node = _self.Node,
       Error = _self.Error,
-      TypeError = _self.TypeError,
+      TypeError$1 = _self.TypeError,
       Reflect = _self.Reflect;
-  var Promise$1 = self.Promise || Lie;
   var defineProperty = Object$1.defineProperty,
       keys = Object$1.keys,
       getOwnPropertyNames = Object$1.getOwnPropertyNames,
@@ -240,7 +322,7 @@
   if (legacy) {
     var HTMLBuiltIn = function HTMLBuiltIn() {
       var constructor = this.constructor;
-      if (!classes.has(constructor)) throw new TypeError('Illegal constructor');
+      if (!classes.has(constructor)) throw new TypeError$1('Illegal constructor');
       var is = classes.get(constructor);
       if (override) return augment(override, is);
       var element = createElement.call(document$1, is);
@@ -284,7 +366,7 @@
     var whenDefined = function whenDefined(name) {
       if (!defined.has(name)) {
         var _,
-            $ = new Lie(function ($) {
+            $ = new Promise(function ($) {
           _ = $;
         });
 
@@ -382,7 +464,6 @@
     };
 
     var customElements = self.customElements;
-    var attachShadow = Element.prototype.attachShadow;
     var _createElement = document$1.createElement;
     var define = customElements.define,
         _get = customElements.get,
@@ -447,12 +528,21 @@
         }
       }
     }),
-        parseShadowed = _qsaObserver3.parse;
+        parseShadowed = _qsaObserver3.parse; // qsaObserver also patches attachShadow
+    // be sure this runs *after* that
+
+
+    var attachShadow = Element.prototype.attachShadow;
+    if (attachShadow) Element.prototype.attachShadow = function (init) {
+      var root = attachShadow.call(this, init);
+      shadowRoots.set(this, root);
+      return root;
+    };
 
     var _whenDefined2 = function _whenDefined2(name) {
       if (!_defined.has(name)) {
         var _,
-            $ = new Promise$1(function ($) {
+            $ = new Promise(function ($) {
           _ = $;
         });
 
@@ -475,7 +565,7 @@
 
       function HTMLBuiltIn() {
         var constructor = this.constructor;
-        if (!_classes.has(constructor)) throw new TypeError('Illegal constructor');
+        if (!_classes.has(constructor)) throw new TypeError$1('Illegal constructor');
 
         var _classes$get = _classes.get(constructor),
             is = _classes$get.is,
@@ -516,11 +606,6 @@
         return element;
       }
     });
-    if (attachShadow) Element.prototype.attachShadow = function (init) {
-      var root = attachShadow.call(this, init);
-      shadowRoots.set(this, root);
-      return root;
-    };
     defineProperty(customElements, 'get', {
       configurable: true,
       value: getCE
