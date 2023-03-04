@@ -1,6 +1,6 @@
 {
   "name": "@ungap/custom-elements",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "All inclusive customElements polyfill for every browser",
   "main": "index.js",
   "module": "index.js",
