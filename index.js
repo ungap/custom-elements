@@ -4,9 +4,7 @@
 
   var attributesObserver = (function (whenDefined, MutationObserver) {
     var attributeChanged = function attributeChanged(records) {
-      for (var i = 0, length = records.length; i < length; i++) {
-        dispatch(records[i]);
-      }
+      for (var i = 0, length = records.length; i < length; i++) dispatch(records[i]);
     };
     var dispatch = function dispatch(_ref) {
       var target = _ref.target,
@@ -191,9 +189,7 @@
   var qsaObserver = (function (options) {
     var live = new WeakMap$1();
     var drop = function drop(elements) {
-      for (var i = 0, length = elements.length; i < length; i++) {
-        live["delete"](elements[i]);
-      }
+      for (var i = 0, length = elements.length; i < length; i++) live["delete"](elements[i]);
     };
     var flush = function flush() {
       var records = observer.takeRecords();
@@ -228,9 +224,7 @@
     };
     var parse = function parse(elements) {
       var connected = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-      for (var i = 0, length = elements.length; i < length; i++) {
-        notifier(elements[i], connected);
-      }
+      for (var i = 0, length = elements.length; i < length; i++) notifier(elements[i], connected);
     };
     var query = options.query;
     var root = options.root || document$2;
@@ -277,9 +271,7 @@
       delete element[key[i]];
     }
     return function () {
-      for (var _i = 0; _i < length; _i++) {
-        element[key[_i]] = value[_i];
-      }
+      for (var _i = 0; _i < length; _i++) element[key[_i]] = value[_i];
     };
   };
   if (legacy) {
@@ -332,41 +324,32 @@
       return defined.get(name).$;
     };
     var augment = attributesObserver(whenDefined, MutationObserver$1);
-    defineProperty(self, 'customElements', {
-      configurable: true,
-      value: {
-        define: function define(is, Class) {
-          if (registry.has(is)) throw new Error("the name \"".concat(is, "\" has already been used with this registry"));
-          classes.set(Class, is);
-          prototypes.set(is, Class.prototype);
-          registry.set(is, Class);
-          query.push(is);
-          whenDefined(is).then(function () {
-            parse(document$1.querySelectorAll(is));
-          });
-          defined.get(is)._(Class);
-        },
-        get: function get(is) {
-          return registry.get(is);
-        },
-        whenDefined: whenDefined
-      }
-    });
+    self.customElements = {
+      define: function define(is, Class) {
+        if (registry.has(is)) throw new Error("the name \"".concat(is, "\" has already been used with this registry"));
+        classes.set(Class, is);
+        prototypes.set(is, Class.prototype);
+        registry.set(is, Class);
+        query.push(is);
+        whenDefined(is).then(function () {
+          parse(document$1.querySelectorAll(is));
+        });
+        defined.get(is)._(Class);
+      },
+      get: function get(is) {
+        return registry.get(is);
+      },
+      whenDefined: whenDefined
+    };
     defineProperty(HTMLBuiltIn.prototype = HTMLElement.prototype, 'constructor', {
       value: HTMLBuiltIn
     });
-    defineProperty(self, 'HTMLElement', {
-      configurable: true,
-      value: HTMLBuiltIn
-    });
-    defineProperty(document$1, 'createElement', {
-      configurable: true,
-      value: function value(name, options) {
-        var is = options && options.is;
-        var Class = is ? registry.get(is) : registry.get(name);
-        return Class ? new Class() : createElement.call(document$1, name);
-      }
-    });
+    self.HTMLElement = HTMLBuiltIn;
+    document$1.createElement = function (name, options) {
+      var is = options && options.is;
+      var Class = is ? registry.get(is) : registry.get(name);
+      return Class ? new Class() : createElement.call(document$1, name);
+    };
     // in case ShadowDOM is used through a polyfill, to avoid issues
     // with builtin extends within shadow roots
     if (!('isConnected' in Node.prototype)) defineProperty(Node.prototype, 'isConnected', {
@@ -393,20 +376,17 @@
         var _self$customElements = self.customElements,
           get = _self$customElements.get,
           _whenDefined = _self$customElements.whenDefined;
-        defineProperty(self.customElements, 'whenDefined', {
-          configurable: true,
-          value: function value(is) {
-            var _this = this;
-            return _whenDefined.call(this, is).then(function (Class) {
-              return Class || get.call(_this, is);
-            });
-          }
-        });
+        self.customElements.whenDefined = function (is) {
+          var _this = this;
+          return _whenDefined.call(this, is).then(function (Class) {
+            return Class || get.call(_this, is);
+          });
+        };
       } catch (o_O) {}
     }
   }
   if (legacy) {
-    var parseShadow = function parseShadow(element) {
+    var _parseShadow = function _parseShadow(element) {
       var root = shadowRoots.get(element);
       _parse(root.querySelectorAll(this), element.isConnected);
     };
@@ -457,7 +437,7 @@
         handle: function handle(element, connected) {
           if (shadowRoots.has(element)) {
             if (connected) shadows.add(element);else shadows["delete"](element);
-            if (_query.length) parseShadow.call(_query, element);
+            if (_query.length) _parseShadow.call(_query, element);
           }
         }
       }),
@@ -510,75 +490,60 @@
         value: HTMLBuiltIn
       });
     });
-    defineProperty(document$1, 'createElement', {
-      configurable: true,
-      value: function value(name, options) {
-        var is = options && options.is;
-        if (is) {
-          var Class = _registry.get(is);
-          if (Class && _classes.get(Class).tag === name) return new Class();
-        }
-        var element = _createElement.call(document$1, name);
-        if (is) element.setAttribute('is', is);
-        return element;
+    document$1.createElement = function (name, options) {
+      var is = options && options.is;
+      if (is) {
+        var Class = _registry.get(is);
+        if (Class && _classes.get(Class).tag === name) return new Class();
       }
-    });
-    defineProperty(customElements, 'get', {
-      configurable: true,
-      value: getCE
-    });
-    defineProperty(customElements, 'whenDefined', {
-      configurable: true,
-      value: _whenDefined2
-    });
-    defineProperty(customElements, 'upgrade', {
-      configurable: true,
-      value: function value(element) {
-        var is = element.getAttribute('is');
-        if (is) {
-          var _constructor = _registry.get(is);
-          if (_constructor) {
-            _augment(setPrototypeOf(element, _constructor.prototype), is);
-            // apparently unnecessary because this is handled by qsa observer
-            // if (element.isConnected && element.connectedCallback)
-            //   element.connectedCallback();
-            return;
-          }
+      var element = _createElement.call(document$1, name);
+      if (is) element.setAttribute('is', is);
+      return element;
+    };
+    customElements.get = getCE;
+    customElements.whenDefined = _whenDefined2;
+    customElements.upgrade = function (element) {
+      var is = element.getAttribute('is');
+      if (is) {
+        var _constructor = _registry.get(is);
+        if (_constructor) {
+          _augment(setPrototypeOf(element, _constructor.prototype), is);
+          // apparently unnecessary because this is handled by qsa observer
+          // if (element.isConnected && element.connectedCallback)
+          //   element.connectedCallback();
+          return;
         }
-        upgrade.call(customElements, element);
       }
-    });
-    defineProperty(customElements, 'define', {
-      configurable: true,
-      value: function value(is, Class, options) {
-        if (getCE(is)) throw new Error("'".concat(is, "' has already been defined as a custom element"));
-        var selector;
-        var tag = options && options["extends"];
-        _classes.set(Class, tag ? {
-          is: is,
-          tag: tag
-        } : {
-          is: '',
-          tag: is
-        });
+      upgrade.call(customElements, element);
+    };
+    customElements.define = function (is, Class, options) {
+      if (getCE(is)) throw new Error("'".concat(is, "' has already been defined as a custom element"));
+      var selector;
+      var tag = options && options["extends"];
+      _classes.set(Class, tag ? {
+        is: is,
+        tag: tag
+      } : {
+        is: '',
+        tag: is
+      });
+      if (tag) {
+        selector = "".concat(tag, "[is=\"").concat(is, "\"]");
+        _prototypes.set(selector, Class.prototype);
+        _registry.set(is, Class);
+        _query.push(selector);
+      } else {
+        define.apply(customElements, arguments);
+        shadowed.push(selector = is);
+      }
+      _whenDefined2(is).then(function () {
         if (tag) {
-          selector = "".concat(tag, "[is=\"").concat(is, "\"]");
-          _prototypes.set(selector, Class.prototype);
-          _registry.set(is, Class);
-          _query.push(selector);
-        } else {
-          define.apply(customElements, arguments);
-          shadowed.push(selector = is);
-        }
-        _whenDefined2(is).then(function () {
-          if (tag) {
-            _parse(document$1.querySelectorAll(selector));
-            shadows.forEach(parseShadow, [selector]);
-          } else parseShadowed(document$1.querySelectorAll(selector));
-        });
-        _defined.get(is)._(Class);
-      }
-    });
+          _parse(document$1.querySelectorAll(selector));
+          shadows.forEach(_parseShadow, [selector]);
+        } else parseShadowed(document$1.querySelectorAll(selector));
+      });
+      _defined.get(is)._(Class);
+    };
   }
 
 })();
