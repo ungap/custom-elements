@@ -265,13 +265,18 @@
   var expando = function expando(element) {
     var key = keys(element);
     var value = [];
+    var ignore = new Set$1();
     var length = key.length;
     for (var i = 0; i < length; i++) {
       value[i] = element[key[i]];
-      delete element[key[i]];
+      try {
+        delete element[key[i]];
+      } catch (SafariTP) {
+        ignore.add(i);
+      }
     }
     return function () {
-      for (var _i = 0; _i < length; _i++) element[key[_i]] = value[_i];
+      for (var _i = 0; _i < length; _i++) ignore.has(_i) || (element[key[_i]] = value[_i]);
     };
   };
   if (legacy) {
