@@ -364,18 +364,18 @@
       }
     });
   } else {
-    legacy = !self.customElements.get('extends-li');
+    legacy = !self.customElements.get('extends-br');
     if (legacy) {
       try {
-        var LI = function LI() {
-          return self.Reflect.construct(HTMLLIElement, [], LI);
+        var BR = function BR() {
+          return self.Reflect.construct(HTMLBRElement, [], BR);
         };
-        LI.prototype = HTMLLIElement.prototype;
-        var is = 'extends-li';
-        self.customElements.define('extends-li', LI, {
-          'extends': 'li'
+        BR.prototype = HTMLLIElement.prototype;
+        var is = 'extends-br';
+        self.customElements.define('extends-br', BR, {
+          'extends': 'br'
         });
-        legacy = document$1.createElement('li', {
+        legacy = document$1.createElement('br', {
           is: is
         }).outerHTML.indexOf(is) < 0;
         var _self$customElements = self.customElements,
